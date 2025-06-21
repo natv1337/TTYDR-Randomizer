@@ -10,6 +10,9 @@ Work in progress randomizer for Paper Mario: The Thousand Year Door remake.
 - Enemy drop randomization
 - Shop item randomization
 
+## Currently Known Issues
+- Badge effects do not apply to enemies
+
 # Project Structure
 * Source - Mod source files.
 * Include - Mod include files.
