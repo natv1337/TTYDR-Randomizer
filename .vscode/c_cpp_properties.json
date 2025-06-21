@@ -1,0 +1,19 @@
+{
+    "version": 4,
+    "configurations": [
+        {
+            "name": "Debug",
+            "includePath": [
+                "${env:DEVKITPRO}/libnx/include",
+                "${env:DEVKITPRO}/devkitA64/aarch64-none-elf/include",
+                "Include",
+                "Vendor",
+                "Vendor/exlaunch/",
+                "Vendor/exlaunch/lib"
+            ],
+            "intelliSenseMode": "gcc-arm64",
+            "cStandard": "c23",
+            "cppStandard": "c++23"
+        }
+    ]
+}
