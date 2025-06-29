@@ -17,9 +17,9 @@ void Mod::initialize() {
 }
 
 void* Mod::allocate(size_t size) {
-    return Util::callFunction<void*, size_t>(offsets::s_ingameAllocate, size);
+    return Util::callFunction<void*, size_t>(Offsets::s_ingameAllocate, size);
 }
 
 void Mod::deallocate(void* ptr) {
-    return Util::callFunction<void, void*>(offsets::s_ingameFree, ptr);
+    return Util::callFunction<void, void*>(Offsets::s_ingameFree, ptr);
 }
