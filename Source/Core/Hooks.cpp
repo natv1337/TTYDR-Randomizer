@@ -29,7 +29,6 @@ HOOK_DEFINE_TRAMPOLINE(fsManagerCtorHk) {
     static void Callback(void* thisp) {
         Orig(thisp);
         nn::fs::MountSdCardForDebug("sd");
-        
     };
 };
 
@@ -41,6 +40,30 @@ HOOK_DEFINE_INLINE(BtlUnitEquipItemHk) {
         }
 
         ctx->X[22] = reinterpret_cast<u64>(Util::getRandomItemId());
+    }
+};
+
+/*
+    Enemies using certain items causes a null-pointer exception in certain fuctions. The next two hooks adds a check
+    for a null WeaponData pointer and returns early if true.
+*/
+HOOK_DEFINE_TRAMPOLINE(CheckDamageHk) {
+    static s32 Callback(void* attackingUnit, void* defeindingUnit, void* unitParts, void* weaponData, u32 w4) {
+        if (!weaponData) {
+            return 1;
+        }
+
+        return Orig(attackingUnit, defeindingUnit, unitParts, weaponData, w4);
+    }
+};
+
+HOOK_DEFINE_TRAMPOLINE(CheckDamage2Hk) {
+    static s32 Callback(void* attackingUnit, void* defeindingUnit, void* unitParts, void* weaponData, u32 w4) {
+        if (!weaponData) {
+            return 0x13;
+        }
+
+        return Orig(attackingUnit, defeindingUnit, unitParts, weaponData, w4);
     }
 };
 
@@ -59,7 +82,7 @@ HOOK_DEFINE_TRAMPOLINE(EntryDropForMobjHk) {
         }
 
         const char* currentItemId = Util::callFunction<const char*, void*>(
-            offsets::s_stringTypeToCString, name
+            Offsets::s_stringTypeToCString, name
         );
 
         if (!Util::shouldItemBeRandomized(currentItemId)) {
@@ -67,7 +90,7 @@ HOOK_DEFINE_TRAMPOLINE(EntryDropForMobjHk) {
         }
         
         Util::callFunction<void, void*, char*>(
-            offsets::s_copyCStringToStringType, name, Util::getRandomItemId()
+            Offsets::s_copyCStringToStringType, name, Util::getRandomItemId()
         );
         identifier = name;
 
@@ -89,7 +112,6 @@ HOOK_DEFINE_INLINE(FieldItemHk) {
         fieldItem->ItemIdentifier = Util::getRandomItemId();
     }
 };
-
 
 static const char* g_currentShopItem = "ITEM_NULL";
 HOOK_DEFINE_INLINE(ShopItemIdHk) {
@@ -125,11 +147,13 @@ HOOK_DEFINE_INLINE(ShopItemPriceHk) {
 void Hooks::installHooks() {
     nnMainHk::InstallAtSymbol("nnMain");
     
-    MainInitHk::InstallAtOffset(offsets::s_mainInitialization);
-    fsManagerCtorHk::InstallAtOffset(offsets::s_fsManagerCtor);
-    FieldItemHk::InstallAtOffset(offsets::s_fieldItemIdHook);
-    BtlUnitEquipItemHk::InstallAtOffset(offsets::s_battleUnitSetItemHook);
-    EntryDropForMobjHk::InstallAtOffset(offsets::s_itemDropForMobjHook);
-    ShopItemIdHk::InstallAtOffset(offsets::s_shopItemIdHook);
-    ShopItemPriceHk::InstallAtOffset(offsets::s_shopItemPriceHook);
+    MainInitHk::InstallAtOffset(Offsets::s_mainInitialization);
+    fsManagerCtorHk::InstallAtOffset(Offsets::s_fsManagerCtor);
+    FieldItemHk::InstallAtOffset(Offsets::s_fieldItemIdHook);
+    BtlUnitEquipItemHk::InstallAtOffset(Offsets::s_battleUnitSetItemHook);
+    EntryDropForMobjHk::InstallAtOffset(Offsets::s_itemDropForMobjHook);
+    ShopItemIdHk::InstallAtOffset(Offsets::s_shopItemIdHook);
+    ShopItemPriceHk::InstallAtOffset(Offsets::s_shopItemPriceHook);
+    CheckDamageHk::InstallAtOffset(Offsets::s_damageCheckHook1);
+    CheckDamage2Hk::InstallAtOffset(Offsets::s_damageCheckHook2);
 }
