@@ -6,24 +6,24 @@
 
 #include <stddef.h>
 
-namespace offsets {
+namespace Offsets {
 
-// Function offset to an ingame allocation function.
+// Offset to an ingame allocation function.
 inline constexpr ptrdiff_t s_ingameAllocate = 0x305D58;
 
-// Function offset to an ingame free function.
+// Offset to an ingame free function.
 inline constexpr ptrdiff_t s_ingameFree = 0x305D74;
 
-// Function offset to a helper function that converts a string to a C string.
+// Offset to a helper function that converts a string to a C string.
 inline constexpr ptrdiff_t s_stringTypeToCString = 0x177608;
 
-// Function offset to a helper function that copies a C string into a string.
+// Offset to a helper function that copies a C string into a string.
 inline constexpr ptrdiff_t s_copyCStringToStringType = 0x177244; 
 
-// Function offset to the function that is responsible for most of the game's initialization.
+// Offset to the function that is responsible for most of the game's initialization.
 inline constexpr ptrdiff_t s_mainInitialization = 0x3277F0;
 
-// Function offset to the fs::Manager constructor.
+// Offset to the fs::Manager constructor.
 inline constexpr ptrdiff_t s_fsManagerCtor = 0x303154; 
 
 // Offset for an inline function hook that sets an item ID for an item found in the field.
@@ -41,7 +41,13 @@ inline constexpr ptrdiff_t s_shopItemIdHook = 0x67CA1C;
 // Offset for an inline function hook that sets a shop item's price.
 inline constexpr ptrdiff_t s_shopItemPriceHook = 0x67CA2C;
 
+// Offset to a helper function that returns a pointer to a wld::fld::data::ItemData type when supplied with an item ID.
 inline constexpr ptrdiff_t s_getItemDataFromId = 0x55B650;
 
+// Offset for a function that assists in calculating damage.
+inline constexpr ptrdiff_t s_damageCheckHook1 = 0x466D70;
+
+// Offset for another function that assists in calculating damage.
+inline constexpr ptrdiff_t s_damageCheckHook2 = 0x467320;
 
 } // namespace offsets
