@@ -1,4 +1,4 @@
-#include "Mod.hpp"
+#include "Core/Mod.hpp"
 
 #include "exlaunch/lib.hpp"
 
@@ -6,7 +6,7 @@ extern "C" void exl_main(void* x0, void* x1) {
     /* Setup hooking environment. */
     exl::hook::Initialize();
 
-    g_mod->setupGameHooks();
+    Mod::initialize();
 }
 
 extern "C" NORETURN void exl_exception_entry() {

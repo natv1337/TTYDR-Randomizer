@@ -45,6 +45,14 @@ bool Util::isItemAllowedForRandomizer(const char* id) {
     return true;
 }
 
+bool Util::shouldItemBeRandomized(const char* id) {
+    if (strstr(id, "ITEM_KEY_")) {
+        return false;
+    }
+
+    return true;
+}
+
 s32 Util::getRandomNumberInRange(s32 lowerBound, s32 upperBound) {
     std::mt19937 randomEngine { static_cast<std::mt19937::result_type>(svcGetSystemTick()) };
     std::uniform_int_distribution<s32> dis(lowerBound, upperBound);

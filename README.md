@@ -5,17 +5,21 @@ Work in progress randomizer for Paper Mario: The Thousand Year Door remake.
 - Question Block/Chest item randomization
 - In-battle enemy item randomization
 - Overworld item randomization
+- Regular shop randomization
 
 ## What isn't Done
 - Enemy drop randomization
-- Shop item randomization
+- Charlieton shop randomization
+- Dazzle shop randomization
 
-## Currently Known Issues
-- Badge effects do not apply to enemies
+## Known Issues
+* Badge effects do not apply to enemies
 
 # Project Structure
 * Source - Mod source files.
 * Include - Mod include files.
+    * nnSdk - nnSdk function definitions.
+    * SDK - Reverse engineered game classes
 * Vendor - Source and include files from other projects.
 
 # Credits

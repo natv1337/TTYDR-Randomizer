@@ -1,6 +1,13 @@
 {
     "files.associations": {
         "functional": "cpp",
-        "random": "cpp"
+        "random": "cpp",
+        "cstring": "cpp",
+        "utility": "cpp",
+        "regex": "cpp",
+        "sstream": "cpp",
+        "cstdint": "cpp",
+        "type_traits": "cpp",
+        "xlocale": "cpp"
     }
 }
