@@ -42,6 +42,10 @@ bool Util::isItemAllowedForRandomizer(const char* id) {
         return false;
     }
 
+    if (strcmp(id, "ITEM_USE_TANKOBU_STRONG") == 0) {
+        return false;
+    }
+
     return true;
 }
 
@@ -54,10 +58,10 @@ bool Util::shouldItemBeRandomized(const char* id) {
 }
 
 s32 Util::getRandomNumberInRange(s32 lowerBound, s32 upperBound) {
-    std::mt19937 randomEngine { static_cast<std::mt19937::result_type>(svcGetSystemTick()) };
+    std::mt19937 s_randomEngine {static_cast<std::mt19937::result_type>(svcGetSystemTick())};
     std::uniform_int_distribution<s32> dis(lowerBound, upperBound);
 
-    return dis(randomEngine);
+    return dis(s_randomEngine);
 }
 
 char* Util::getRandomItemId() {
