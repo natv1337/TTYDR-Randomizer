@@ -1,159 +1,97 @@
 #include "Core/Hooks.hpp"
 
-#include "exlaunch/lib.hpp"
-
-#include "Core/Mod.hpp"
-#include "SDK.hpp"
+#include "Offsets.hpp"
 #include "Util.hpp"
 
-#include "nnSdk/fs.hpp"
+#include "Patches/MainInitHook.hpp"
+#include "Patches/FsManagerCtorHook.hpp"
+#include "Patches/BattleUnitPosessionItemHook.hpp"
+#include "Patches/SetupShopItemsHook.hpp"
+#include "Patches/DamageCheckCrashFixHooks.hpp"
+#include "Patches/SetBadgeShopItemsHook.hpp"
+#include "Patches/CharlietonOverworldItemsHook.hpp"
+#include "Patches/CharlietonPitItemsHook.hpp"
+#include "Patches/EntryDropForMobjHook.hpp"
+#include "Patches/SetDazzleItemsHook.hpp"
+#include "Patches/SetFieldItemHook.hpp"
+#include "Patches/AudienceSetItemHook.hpp"
 
-#include "Offsets.hpp"
+// HOOK_DEFINE_TRAMPOLINE(GswfGetValue) {
+//     static s32 Callback(Gswf* gswf, const char* flag) {
+//         s32 result = Orig(gswf, flag);
+//         if (strstr(flag, "GSWF_BTL_MONOSIRI_UNITKIND")) {
+//             return result;
+//         }
+//         if (strstr(flag, "GSWF_SHINE_") || strstr(flag, "GSWF_STARPIECE_")) {
+//             return result;
+//         }
 
-// Anything that needs to run before game initialization goes here (code after call to Orig will not run).
-HOOK_DEFINE_TRAMPOLINE(nnMainHk) {
-    static void Callback() {
-        Orig();
-    }
-};
+//         LOG("[GSWFGetValue] %s (%d)", flag, result);
+//         return result;
+//     }
+// };
 
-// Important code that should be ran after the game finishes initializing should go here.
-HOOK_DEFINE_TRAMPOLINE(MainInitHk) {
-    static void Callback() {
-        Orig();
-    }
-};
+// HOOK_DEFINE_TRAMPOLINE(GswfSetValue) {
+//     static void Callback(Gswf* gswf, const char* flag, s32 value) {
+//         Orig(gswf, flag, value);
+//         LOG("[GSWFSetValue] %s (%d)", flag, value);
+//     }
+// };
 
-// Code that requires fs::Manager to be initialized first should go here (only needed for nn::fs::MountSdCardForDebug)
-HOOK_DEFINE_TRAMPOLINE(fsManagerCtorHk) {
-    static void Callback(void* thisp) {
-        Orig(thisp);
-        nn::fs::MountSdCardForDebug("sd");
-    };
-};
+// HOOK_DEFINE_TRAMPOLINE(GswGetValue) {
+//     static s32 Callback(Gswf* gswf, const char* flag) {
+//         s32 result = Orig(gswf, flag);
+//         LOG("[GSWGetValue] %s (%d)", flag, result);
+//         return result;
+//     }
+// };
 
-// Sets a held item for a battle unit.
-HOOK_DEFINE_INLINE(BtlUnitEquipItemHk) {
-    static void Callback(exl::hook::InlineCtx* ctx) {
-        if (!g_mod->getSettings().RandomizeEnemyItems) {
-            return;
-        }
+// HOOK_DEFINE_TRAMPOLINE(GswSetValue) {
+//     static void Callback(Gswf* gswf, const char* flag, s32 value) {
+//         Orig(gswf, flag, value);
+//         LOG("[GSWSetValue] %s (%d)", flag, value);
+//     }
+// };
 
-        ctx->X[22] = reinterpret_cast<u64>(Util::getRandomItemId());
-    }
-};
+// HOOK_DEFINE_TRAMPOLINE(LoadMapHk) {
+//     static void Callback(void* x0, char* x1, const char* x2) {
+//         if (strcmp(x2, "aaa_00")) {
+//             return Orig(x0, x1, "gor_00");
+//         }
+//         if (strcmp(x2, "prologue_from_the_start")) {
+//             return Orig(x0, x1, "from_prologue");
+//         }
+//         return Orig(x0, x1, x2);
+//     }
+// };
 
-/*
-    Enemies using certain items causes a null-pointer exception in certain fuctions. The next two hooks adds a check
-    for a null WeaponData pointer and returns early if true.
-*/
-HOOK_DEFINE_TRAMPOLINE(CheckDamageHk) {
-    static s32 Callback(void* attackingUnit, void* defeindingUnit, void* unitParts, void* weaponData, u32 w4) {
-        if (!weaponData) {
-            return 1;
-        }
-
-        return Orig(attackingUnit, defeindingUnit, unitParts, weaponData, w4);
-    }
-};
-
-HOOK_DEFINE_TRAMPOLINE(CheckDamage2Hk) {
-    static s32 Callback(void* attackingUnit, void* defeindingUnit, void* unitParts, void* weaponData, u32 w4) {
-        if (!weaponData) {
-            return 0x13;
-        }
-
-        return Orig(attackingUnit, defeindingUnit, unitParts, weaponData, w4);
-    }
-};
-
-struct MobjHandle {
-    void** vmt;
-    u64 unk1;
-    u32 unk2;
-    u32 unk3;
-    void* res;
-};
-
-HOOK_DEFINE_TRAMPOLINE(EntryDropForMobjHk) {
-    static MobjHandle Callback(void* name, void* identifier, float* pos) {
-        if (!g_mod->getSettings().RandomizeBlockAndChestItems) {
-            return Orig(name, identifier, pos);
-        }
-
-        const char* currentItemId = Util::callFunction<const char*, void*>(
-            Offsets::s_stringTypeToCString, name
-        );
-
-        if (!Util::shouldItemBeRandomized(currentItemId)) {
-            return Orig(name, identifier, pos);
-        }
-        
-        Util::callFunction<void, void*, char*>(
-            Offsets::s_copyCStringToStringType, name, Util::getRandomItemId()
-        );
-        identifier = name;
-
-        return Orig(name, identifier, pos);
-    }
-};
-
-HOOK_DEFINE_INLINE(FieldItemHk) {
-    static void Callback(exl::hook::InlineCtx* ctx) {
-        if (!g_mod->getSettings().RandomizeFieldItems) {
-            return;
-        }
-
-        auto fieldItem = reinterpret_cast<wld::fld::data::DisposItem*>(ctx->X[8]);
-        if (!Util::shouldItemBeRandomized(fieldItem->ItemIdentifier)) {
-            return;
-        }
-
-        fieldItem->ItemIdentifier = Util::getRandomItemId();
-    }
-};
-
-static const char* g_currentShopItem = "ITEM_NULL";
-HOOK_DEFINE_INLINE(ShopItemIdHk) {
-    static void Callback(exl::hook::InlineCtx* ctx) {
-        if (!g_mod->getSettings().RandomizeShopItems) {
-            return;
-        }
-
-        if (!Util::shouldItemBeRandomized(reinterpret_cast<const char*>(ctx->X[1]))) {
-            return;
-        }
-
-        g_currentShopItem = Util::getRandomItemId();
-        ctx->X[1] = reinterpret_cast<u64>(g_currentShopItem);
-    }
-};
-
-HOOK_DEFINE_INLINE(ShopItemPriceHk) {
-    static void Callback(exl::hook::InlineCtx* ctx) {
-        if (!g_mod->getSettings().RandomizeShopItems) {
-            return;
-        }
-
-        auto* itemData = Util::callFunction<wld::fld::data::ItemData*, const char*>(
-            0x55b650, 
-            g_currentShopItem
-        );
-
-        ctx->W[8] = itemData->DefaultPrice;
-    }
-};
+// static const char* g_map = "gor_00";
+// HOOK_DEFINE_INLINE(BeginningMapHk) {
+//     static void Callback(exl::hook::InlineCtx* ctx) {
+//         ctx->X[2] = (u64)g_map;
+//     }
+// };
 
 void Hooks::installHooks() {
-    nnMainHk::InstallAtSymbol("nnMain");
-    
-    MainInitHk::InstallAtOffset(Offsets::s_mainInitialization);
-    fsManagerCtorHk::InstallAtOffset(Offsets::s_fsManagerCtor);
-    FieldItemHk::InstallAtOffset(Offsets::s_fieldItemIdHook);
-    BtlUnitEquipItemHk::InstallAtOffset(Offsets::s_battleUnitSetItemHook);
-    EntryDropForMobjHk::InstallAtOffset(Offsets::s_itemDropForMobjHook);
-    ShopItemIdHk::InstallAtOffset(Offsets::s_shopItemIdHook);
-    ShopItemPriceHk::InstallAtOffset(Offsets::s_shopItemPriceHook);
-    CheckDamageHk::InstallAtOffset(Offsets::s_damageCheckHook1);
-    CheckDamage2Hk::InstallAtOffset(Offsets::s_damageCheckHook2);
+    MainInitHook::InstallAtOffset(Offsets::s_mainInitialization);
+    FsManagerCtorHook::InstallAtOffset(Offsets::s_fsManagerCtor);
+
+    SetFieldItemHook::InstallAtOffset(Offsets::s_fieldItemIdHook);
+    BattleUnitPosessionItemHook::InstallAtOffset(Offsets::s_battleUnitSetItemHook);
+    EntryDropForMobjHook::InstallAtOffset(Offsets::s_itemDropForMobjHook);
+    SetupShopItemsHook::InstallAtOffset(Offsets::s_setupShopItemsHook);
+    PreCheckDamageCrashFixHook::InstallAtOffset(Offsets::s_damageCheckHook1);
+    CheckDamageCrashFixHook::InstallAtOffset(Offsets::s_damageCheckHook2);
+    SetBadgeShopItemsHook::InstallAtOffset(Offsets::s_setBadgeShopItemsHook);
+    CharlietonItemsHook::InstallAtOffset(Offsets::s_charlietonOverworldItemsHook);
+    CharlietonPitItemsHook::InstallAtOffset(Offsets::s_charlietonPitItemsHook);
+    DazzleItemsHook::InstallAtOffset(Offsets::s_setDazzleItemsHook);
+    AudienceSetItemHook::InstallAtOffset(Offsets::s_audienceSetItemHook);
+    // GswfGetValue::InstallAtOffset(0x2b0e58);
+    // GswfSetValue::InstallAtOffset(0x2b0f94);
+    // GswSetValue::InstallAtOffset(0x2b0c40);
+    // GswGetValue::InstallAtOffset(0x2b0b0c);
+
+    // PouchInitializeHk::InstallAtOffset(0x2a7a20);
+    // BeginningMapHk::InstallAtOffset(0xa1cdb4);
 }

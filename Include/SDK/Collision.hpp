@@ -1,4 +1,10 @@
+/**
+ * @file Collision.hpp
+ * @brief Class definitions for the collision namespace.
+ */
 #pragma once
+
+#include "../Util.hpp"
 
 namespace collision {
 
@@ -14,6 +20,7 @@ public:
     virtual void vfunc6();
     virtual void vfunc7();
 };
+ASSERT_SIZE(ShapeObjCtrl, 0x08);
 
 class ShapeObjManager {
 public:
@@ -23,7 +30,7 @@ private:
     char pad_0008[0xC8];
 
 };
-static_assert(sizeof(ShapeObjManager) == 0xD0);
+ASSERT_SIZE(ShapeObjManager, 0xD0);
 
 }
 

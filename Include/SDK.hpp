@@ -4,4 +4,5 @@
 #include "SDK/Hid.hpp"
 #include "SDK/Collision.hpp"
 #include "SDK/Fs.hpp"
+#include "SDK/String.hpp"
 #include "SDK/Util.hpp"

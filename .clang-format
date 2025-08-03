@@ -1,8 +1,18 @@
+---
 Language: Cpp
 BasedOnStyle: LLVM
-IndentWidth: 4
+AccessModifierOffset: -4
 ColumnLimit: 120
+IndentWidth: 4
+SortIncludes: true
 PointerAlignment: Left
 AlwaysBreakTemplateDeclarations: Yes
-AccessModifierOffset: -4
 NamespaceIndentation: None
+AlignConsecutiveAssignments:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: false
+AlignConsecutiveBitFields:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: false

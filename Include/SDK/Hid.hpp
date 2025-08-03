@@ -1,6 +1,11 @@
+/**
+ * @file Hid.hpp
+ * @brief Class definitions for the hid namespace.
+ */
 #pragma once
 
 #include "Util.hpp"
+#include "Offsets.hpp"
 
 namespace hid {
 
@@ -34,7 +39,7 @@ class DebugInput {
 
 class Manager {
 public:
-    GET_STATIC_INSTANCE(Manager, 0x2525058)
+    GET_STATIC_INSTANCE(Manager, Offsets::s_hidManager)
 
 private:
     DebugPad m_debugPad;

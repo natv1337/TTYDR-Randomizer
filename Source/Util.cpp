@@ -2,76 +2,96 @@
 
 #include <random>
 
-#include "exlaunch/lib.hpp"
 #include "SDK.hpp"
+#include "exlaunch/lib.hpp"
+#include "nnSdk/socket.hpp"
 
-uintptr_t Util::getBaseAddress() {
+#include "SDK/Wld/WldFld.hpp"
+
+static constexpr s32 s_randomItemIdMin = 0;
+static constexpr s32 s_randomItemIdMax = 341;
+
+uintptr_t Util::getBaseAddress() { 
     return exl::util::modules::GetTargetStart();
 }
 
-bool Util::isItemAllowedForRandomizer(const char* id) {
-    if (strcmp(id, "ITEM_NULL") == 0) {
+bool Util::isItemAllowedForRandomizer(wld::fld::data::ItemData* itemData) {
+    using namespace wld::fld::item;
+    switch (itemData->ItemKind) {
+    case ItemKind::ItemKind_None:
+    case ItemKind::ItemKind_KeyNormal:
+    case ItemKind::ItemKind_KeyKey:
+    case ItemKind::ItemKind_KeyStage:
+    case ItemKind::ItemKind_KeyStarstone:
+    case ItemKind::ItemKind_UseNormal:
+    case ItemKind::ItemKind_Trash:
+    case ItemKind::ItemKind_Immediately:
         return false;
-    }
-
-    if (strstr(id, "ITEM_KEY_")) {
-        return false;
-    }
-
-    if (strstr(id, "ITEM_TRASH_")) {
-        return false;
-    }
-
-    if (strstr(id, "ITEM_USE_COIN")) {
-        return false;
-    }
-
-    if (strstr(id, "ITEM_USE_MONTE")) {
-        return false;
-    }
-
-    if (strcmp(id, "ITEM_USE_HEART") == 0) {
-        return false;
-    }
-
-    if (strcmp(id, "ITEM_USE_FLOWER") == 0) {
-        return false;
-    }
-
-    if (strstr(id, "ITEM_IMM")) {
-        return false;
-    }
-
-    if (strcmp(id, "ITEM_USE_TANKOBU_STRONG") == 0) {
-        return false;
+    case ItemKind::ItemKind_UseOther:
+        if (strcmp(itemData->Identifier, "ITEM_USE_TANKOBU_STRONG") == 0) {
+            return false;
+        }
+        return true;
+    default:
+        return true;
     }
 
     return true;
 }
 
 bool Util::shouldItemBeRandomized(const char* id) {
-    if (strstr(id, "ITEM_KEY_")) {
-        return false;
-    }
-
-    return true;
+    return strstr(id, "ITEM_KEY_") == nullptr;
 }
 
 s32 Util::getRandomNumberInRange(s32 lowerBound, s32 upperBound) {
-    std::mt19937 s_randomEngine {static_cast<std::mt19937::result_type>(svcGetSystemTick())};
+    std::mt19937 s_randomEngine{static_cast<std::mt19937::result_type>(svcGetSystemTick())};
     std::uniform_int_distribution<s32> dis(lowerBound, upperBound);
 
     return dis(s_randomEngine);
 }
 
 char* Util::getRandomItemId() {
-    fs::ElfFile* characterItemElf = wld::Manager::getInstance()->getCharacterItem()->getElfFile();
-    auto itemList = characterItemElf->getElfData().findSymbol<wld::fld::data::ItemData>("wld::fld::data::s_Data");
+    wld::fld::data::ItemData* itemList = Util::getItemDataArray();
 
-    char* randomItemStr = nullptr;
+    s32 randomItemIdx = 0;
     do {
-        randomItemStr = itemList[Util::getRandomNumberInRange(0, 341)].Identifier;
-    } while (!Util::isItemAllowedForRandomizer(randomItemStr)); 
-    
-    return randomItemStr;
+        randomItemIdx = Util::getRandomNumberInRange(s_randomItemIdMin, s_randomItemIdMax);\
+    } while (!Util::isItemAllowedForRandomizer(&itemList[randomItemIdx]));
+
+    return itemList[randomItemIdx].Identifier;
+}
+
+s32 Util::getRandomItemIndex() {
+    wld::fld::data::ItemData* itemList = Util::getItemDataArray();
+
+    u32 itemId = 0;
+    do {
+        itemId = Util::getRandomNumberInRange(s_randomItemIdMin, s_randomItemIdMax);
+    } while (!Util::isItemAllowedForRandomizer(&itemList[itemId]));
+
+    return itemId;
+}
+
+bool Util::isItemKindBadge(wld::fld::item::ItemKind kind) {
+    return (kind > wld::fld::item::ItemKind_Trash && kind < wld::fld::item::ItemKind_Immediately);
+}
+
+s32 Util::getRandomBadgeItemIndex() {
+    wld::fld::data::ItemData* itemList = Util::getItemDataArray();
+
+    u32 itemId = 0;
+    do {
+        itemId = Util::getRandomNumberInRange(s_randomItemIdMin, s_randomItemIdMax);
+    } while (!Util::isItemAllowedForRandomizer(&itemList[itemId]) || !isItemKindBadge(itemList[itemId].ItemKind));
+
+    return itemId;
+}
+
+wld::fld::data::ItemData* Util::getItemDataArray() {
+    return wld::fld::getItemDataArray();
+}
+
+bool Util::isIpv4AddressValid(const char* address) {
+    sockaddr addr;
+    return nn::socket::InetPton(2, address, &addr) == 1;
 }

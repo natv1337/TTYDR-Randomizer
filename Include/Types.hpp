@@ -1,3 +1,7 @@
+/**
+ * @file Types.hpp
+ * @brief Common type definitions used across the program.
+ */
 #pragma once
 
 #include <stdint.h>

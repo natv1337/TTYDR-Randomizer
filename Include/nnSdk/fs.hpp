@@ -2,37 +2,51 @@
 
 #include "Types.hpp"
 #include "result.hpp"
+#include "stddef.h"
 
 namespace nn::fs {
 
-enum OpenMode {
-    OpenMode_Read = 1 << 0,
-    OpenMode_Write = 1 << 1,
-    OpenMode_Append = 1 << 2
+struct FileHandle {
+    u64 _internal;
+};
+
+enum DirectoryEntryType {
+    DirectoryEntryType_Directory,
+    DirectoryEntryType_File,
 };
 
 enum WriteOptionFlag {
     WriteOptionFlag_Flush = 1 << 0,
 };
 
-enum DirectoryEntryType {
-    DirectoryEntryType_Directory,
-    DirectoryEntryType_File
+struct WriteOption {
+    int flags;
+    static WriteOption CreateOption(int flags) {
+        return {
+            .flags = flags,
+        };
+    }
 };
 
-struct FileHandle {
-    u64 _internal;
+enum OpenMode {
+    OpenMode_Read   = 1 << 0,
+    OpenMode_Write  = 1 << 1,
+    OpenMode_Append = 1 << 2,
+
+    OpenMode_ReadWrite  = OpenMode_Read | OpenMode_Write,
 };
 
-nn::Result CreateFile(const char* path, s64 size);
-nn::Result OpenFile(FileHandle* outHandle, const char* path, OpenMode mode);
+Result CreateFile(const char* path, s64 size);
+Result OpenFile(FileHandle* outHandle, char const* path, int mode);
+Result DeleteFile(const char* path);
 void CloseFile(FileHandle handle);
-nn::Result WriteFile(FileHandle handle, s64 position, const void* buffer, u64 size, const WriteOptionFlag& opt);
 
-nn::Result MountSdCardForDebug(const char* mount);
-  
-nn::Result GetEntryType(nn::fs::DirectoryEntryType*, const char*);
+Result WriteFile(FileHandle handle, s64 position, const void* buffer, u64 size, const WriteOption& option);
 
-nn::Result DeleteFile(const char*);
+Result SetFileSize(FileHandle handle, s64 size);
+
+Result MountSdCardForDebug(const char* mount);
+
+Result GetEntryType(DirectoryEntryType* out, const char* path);
 
 } // namespace nn::fs
